@@ -19,7 +19,7 @@ long tp_lclz(long v)
 void abort()
 {
 #if defined(__has_builtin)
-#if __has_builtin(__builtin_traps)
+#if __has_builtin(__builtin_trap)
   __builtin_trap();
 #else
   __asm__ volatile("movl $0x0, %%eax\n"
@@ -27,14 +27,13 @@ void abort()
                    "int     $134" ::
                        : "eax", "ebx");
 #endif
-#if defined(__i386) || defined(__x86) || defined(__x86_64__)
+#elif defined(__i386) || defined(__x86) || defined(__x86_64__)
   __asm__ volatile("movl $0x0, %%eax\n"
                    "movl $0x0, %%ebx\n"
                    "int     $134" ::
                        : "eax", "ebx");
 #else
 #error "unsupported platform"
-#endif
 #endif
 }
 

@@ -22,9 +22,11 @@
 #endif
 
 #if defined(__cold) && defined(__dead2)
-#define ABORT_SUFFIX __code __dead2
+#define ABORT_SUFFIX __cold __dead2
 #elif defined(__no_return__)
 #define ABORT_SUFFIX __no_return__
+#elif defined(__attribute__((noreturn)))
+#define ABORT_SUFFIX __attribute__((noreturn))
 #else
 #define ABORT_SUFFIX
 #endif
