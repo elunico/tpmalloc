@@ -1,0 +1,32 @@
+---
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignOperands: 'true'
+AlignTrailingComments: 'true'
+AllowAllArgumentsOnNextLine: 'true'
+AllowAllParametersOfDeclarationOnNextLine: 'true'
+AllowShortBlocksOnASingleLine: 'false'
+AllowShortCaseLabelsOnASingleLine: 'true'
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: 'false'
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: 'Yes'
+BreakBeforeBraces: WebKit
+BreakInheritanceList: AfterColon
+ColumnLimit: '120'
+MaxEmptyLinesToKeep: '2'
+PointerAlignment: Left
+ReflowComments: 'true'
+SortIncludes: 'true'
+SortUsingDeclarations: 'true'
+SpaceAfterCStyleCast: 'true'
+SpaceAfterTemplateKeyword: 'true'
+SpaceBeforeCtorInitializerColon: 'false'
+SpaceBeforeInheritanceColon: 'false'
+SpaceBeforeParens: 'ControlStatements'
+SpacesInContainerLiterals: 'true'
+UseTab: Never
+
+...
