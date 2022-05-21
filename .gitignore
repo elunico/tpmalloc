@@ -4,4 +4,16 @@ build/
 CMakeFiles/
 Makefile
 CMakeCache.txt
+cmake-build-debug/
 cmake_install.cmake
+color.*
+image.*
+*.o
+ibmp.*
+mytest
+test
+a.out
+manual-run.sh
+linrun
+linux-run.sh
+tpmalloc
