@@ -3,7 +3,7 @@
 
 //#include "image.h"
 
-#ifdef SPECIAL_START
+#ifdef TPMALLOC_SPECIAL_START
 int _start()
 #else
 int main()

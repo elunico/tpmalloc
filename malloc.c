@@ -69,6 +69,13 @@ void* realloc(void* pointer, size_t new_size)
     SETORDER(start, new_order);
     return pointer;
   } else {
+    // TODO: if the size reduces by as little as 64 or as much as (half the
+    // current size - 1) nothing happens. Theoretically I could free smaller
+    // blocks if we go from for example 1000 to 600, I could free a few
+    // blocks-some as large as 256 bytes, however the only time realloc "frees"
+    // memory is if the new size is less than or equal to half the nearest power
+    // of two of the current size when rounding up. So a block of size 1000
+    // needs to be realloced to size <= 512 for any change in memory to happen
     return pointer;
   }
 }
@@ -130,8 +137,12 @@ void* malloc(size_t size)
 void free(void* pointer)
 {
   if (pointer == NULL) {
+#ifdef TPMALLOC_DIE_ON_NULL_FREE
     write(STDOUT_FILENO, "free() called on NULL!\n", 25);
     abort();
+#else
+    return ;
+#endif
   }
   struct free_block* block = ptr_to_block(pointer);
   relink_free_block(block);
