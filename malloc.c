@@ -29,8 +29,35 @@ void free(void* pointer)
     return;
 #endif
   }
+  // TODO: merge adjacent blocks
   struct free_block* block = ptr_to_block(pointer);
-  relink_free_block(block);
+  UNSETALLOC(block);
+  int order = GETORDER(block);
+
+  relink_free_block(block, order);
+
+  struct free_block* walker = free_lists[order].next;
+  int                count  = 0;
+  while (walker != &free_lists[order]) {
+    // walker is higher address than block
+    // remove walker from free list and merge with block
+    if (walker == (((void*) block) + (1 << order))) {
+      struct free_block* base = block;
+      SETORDER(base, order + 1);
+      pluck_block(walker);
+      walker = base;
+      relink_free_block(base, order + 1);
+    } else if (walker == (((void*) block) - (1 << order))) {
+      // walker is lower address than block
+      // remove block from free list and merge with walker
+      struct free_block* base = walker;
+      SETORDER(base, order + 1);
+      pluck_block(block);
+      relink_free_block(base, order + 1);
+    }
+    walker = walker->next;
+    count++;
+  }
 }
 
 void* malloc(size_t size)
@@ -55,11 +82,13 @@ void* malloc(size_t size)
   if (free_order == order) {
     void* candidate = unlink_free_block(order);
     SETALLOC(candidate);
+    SETORDER(candidate, order);
     return candidate + FREE_OFF_BLOCK;
   } else if (free_order > order && free_order < LISTCOUNT) {
     struct free_block* block = unlink_free_block(free_order);
     struct free_block* ptr   = split_block(block, free_order, order);
     SETALLOC(ptr);
+    SETORDER(ptr, order);
     return ptr + FREE_OFF_BLOCK;
   } else {
     void* candidate = req_new_block(order);
@@ -70,6 +99,7 @@ void* malloc(size_t size)
     }
 
     SETALLOC(candidate);
+    SETORDER(candidate, order);
     return candidate + FREE_OFF_BLOCK;
   }
 }

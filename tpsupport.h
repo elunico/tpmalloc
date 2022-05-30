@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define FREE_OFF_BLOCK 16  // alignment; must be >sizeof(struct free_block)
+#define FREE_OFF_BLOCK 32  // alignment; must be >sizeof(struct free_block)
 
 #define ISALLOC(block) ((((struct free_block*) (block))->order) & (1 << 7)) != 0
 #define SETALLOC(block) ((((struct free_block*) (block))->order) |= (1 << 7))
@@ -20,12 +20,30 @@
 #define REAL_SIZE(size) ((size) + FREE_OFF_BLOCK)
 #define ORDER_FROM_RLSIZE(rlsize) ((sizeof(long) * 8) - LCLZ(((long) (rlsize))))
 
-#define ASSERT(expression)                                           \
-  do {                                                               \
-    if (!(expression)) {                                             \
-      fnputsd(STDERR_FILENO, "Assertion failed: " #expression "\n"); \
-      abort();                                                       \
-    }                                                                \
+#define TOSTRING(x) #x
+#define STRINGIFY(x) TOSTRING(x)
+
+#define ASSERT(expression)                                                  \
+  do {                                                                      \
+    if (!(expression)) {                                                    \
+      fnputsd(STDERR_FILENO, "Assertion failed: " __FILE__                  \
+                             ":" STRINGIFY(__LINE__) " " #expression "\n"); \
+      abort();                                                              \
+    }                                                                       \
+  } while (0)
+
+#define TODO(message)                                                  \
+  do {                                                                 \
+    fnputsd(STDERR_FILENO, "Not implemented: " __FILE__                \
+                           ":" STRINGIFY(__LINE__) " " #message "\n"); \
+    abort();                                                           \
+  } while (0)
+
+#define UNREACHABLE(...)                                               \
+  do {                                                                 \
+    fnputsd(STDERR_FILENO, "Expected " __FILE_NAME__ " at " STRINGIFY( \
+                               __LINE__) " to be unreachable!\n");     \
+    abort();                                                           \
   } while (0)
 
 #define LISTCOUNT 64  // 1 << 1 to 1 << 64
@@ -50,6 +68,7 @@
 
 struct free_block {
   struct free_block* next;
+  struct free_block* prev;
   uint8_t            order;
   // order is log2(size)
   // top two bits are isalloc'd and 0
@@ -65,7 +84,7 @@ void*              memcpy(void* destination, void const* src, size_t size);
 struct free_block* ptr_to_block(void* pointer);
 void               puti(int i);
 void               putsd(char const* s);
-void               relink_free_block(struct free_block* block);
+void               relink_free_block(struct free_block* block, unsigned int o);
 void*              req_new_block(size_t order);
 struct free_block* split_block(struct free_block* block,
                                unsigned int       cur_order,
@@ -73,5 +92,6 @@ struct free_block* split_block(struct free_block* block,
 long               tp_lclz(long v);
 void*              tp_sbrk(size_t increase);
 void*              unlink_free_block(size_t order);
+struct free_block* pluck_block(struct free_block* block);
 
 #endif  // TPMALLOC_TPSUPPORT_H

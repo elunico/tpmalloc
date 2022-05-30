@@ -6,6 +6,23 @@
 
 struct free_block free_lists[LISTCOUNT];
 
+#if !defined(__GNUC__) && !defined(__clang__)
+#error "No constructor"
+#endif
+
+void initialize_free_lists(void)
+{
+  for (int i = 0; i < LISTCOUNT; i++) {
+    free_lists[i].next = &free_lists[i];
+    free_lists[i].prev = &free_lists[i];
+  }
+}
+
+void __attribute__((constructor)) premain()
+{
+  initialize_free_lists();
+}
+
 void abort()
 {
 #if defined(__has_builtin)
@@ -59,6 +76,17 @@ void* memset(void* pointer, int value, size_t size)
   return pointer;
 }
 
+struct free_block* pluck_block(struct free_block* block)
+{
+#ifndef NDEBUG
+  for (int i = 0; i < LISTCOUNT; i++)
+    ASSERT(block != &free_lists[i]);
+#endif
+  block->prev->next = block->next;
+  block->next->prev = block->prev;
+  return block;
+}
+
 void puti(int i)
 {
   char c[64];
@@ -82,15 +110,16 @@ struct free_block* ptr_to_block(void* pointer)
 {
   struct free_block* block = pointer - FREE_OFF_BLOCK;
   ASSERT(ISALLOC(block));
-  UNSETALLOC(block);
   return block;
 }
 
-void relink_free_block(struct free_block* block)
+void relink_free_block(struct free_block* block, unsigned int order)
 {
-  int order              = GETORDER(block);
-  block->next            = free_lists[order].next;
-  free_lists[order].next = block;
+  //  int order         = GETORDER(block);
+  block->next       = free_lists[order].next;
+  block->prev       = &free_lists[order];
+  block->next->prev = block;
+  block->prev->next = block;
 }
 
 void* req_new_block(size_t order)
@@ -119,7 +148,7 @@ struct free_block* split_block(struct free_block* block,
     struct free_block* half = (start + (1 << (current_order - 1)));
     UNSETALLOC(half);
     SETORDER(half, current_order - 1);
-    relink_free_block(half);
+    relink_free_block(half, current_order - 1);
     current_order--;
   }
   return start;
@@ -152,7 +181,8 @@ void* tp_sbrk(size_t increase)
 
 void* unlink_free_block(size_t order)
 {
-  void* candidate        = free_lists[order].next;
-  free_lists[order].next = free_lists[order].next->next;
+  void* candidate              = free_lists[order].next;
+  free_lists[order].next       = ((struct free_block*) candidate)->next;
+  free_lists[order].next->prev = &free_lists[order];
   return candidate;
 }

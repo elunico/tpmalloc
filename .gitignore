@@ -17,3 +17,4 @@ manual-run.sh
 linrun
 linux-run.sh
 tpmalloc
+.DS_Store
